@@ -65,7 +65,7 @@ const Select = React.createClass({
 		onClose: React.PropTypes.func,              // fires when the menu is closed
 		onFocus: React.PropTypes.func,              // onFocus handler: function (event) {}
 		onInputChange: React.PropTypes.func,        // onInputChange handler: function (inputValue) {}
-		onKeyDown: React.PropTypes.func,            // onKeyDown handler: function (event) {}
+		onKeyDown: React.PropTypes.func,            // onKeyDown handler: function (event, isOpen) {}
 		onMenuScrollToBottom: React.PropTypes.func, // fires when the menu is scrolled to the bottom; can be used to paginate options
 		onOpen: React.PropTypes.func,               // fires when the menu is opened
 		onValueClick: React.PropTypes.func,         // onClick handler for value labels: function (value, event) {}
@@ -387,7 +387,7 @@ const Select = React.createClass({
 		if (this.props.disabled) return;
 
 		if (this.props.onKeyDown) {
-			this.props.onKeyDown(event);
+			this.props.onKeyDown(event, this.state.isOpen);
 		}
 
 		switch (event.keyCode) {
