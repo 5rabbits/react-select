@@ -877,6 +877,7 @@ const Select = React.createClass({
 			'is-open': isOpen,
 			'is-pseudo-focused': this.state.isPseudoFocused,
 			'is-searchable': this.props.searchable,
+			'is-clearable': this.props.clearable,
 			'has-value': valueArray.length,
 		});
 
