@@ -376,6 +376,8 @@ var Select = _react2['default'].createClass({
 		menuRenderer: _react2['default'].PropTypes.func, // renders a custom menu with options
 		menuStyle: _react2['default'].PropTypes.object, // optional style to apply to the menu
 		multi: _react2['default'].PropTypes.bool, // multi-value input
+		multiSelectAll: _react2['default'].PropTypes.bool,
+		multiSelectAllText: _react2['default'].PropTypes.string,
 		name: _react2['default'].PropTypes.string, // generates a hidden <input /> tag with this field name for html forms
 		newOptionCreator: _react2['default'].PropTypes.func, // factory to create new options when allowCreate set
 		noResultsText: stringOrNode, // placeholder displayed when there are no matching search results
@@ -435,6 +437,8 @@ var Select = _react2['default'].createClass({
 			matchProp: 'any',
 			menuBuffer: 0,
 			multi: false,
+			multiSelectAll: false,
+			multiSelectAllText: 'Select all',
 			noResultsText: 'No results found',
 			onBlurResetsInput: true,
 			openAfterFocus: false,
@@ -1176,6 +1180,24 @@ var Select = _react2['default'].createClass({
 		});
 	},
 
+	renderSelectAll: function renderSelectAll(options) {
+		var _this6 = this;
+
+		var optionClass = (0, _classnames2['default'])({
+			'Select-option': true,
+			'is-select-all': true,
+			'is-focused': false });
+
+		// TODO: implement
+		return _react2['default'].createElement(
+			'div',
+			{ className: optionClass, onMouseDown: function (event) {
+					return _this6.selectAll(event, options);
+				} },
+			this.props.multiSelectAllText
+		);
+	},
+
 	getFocusableOption: function getFocusableOption(selectedOption) {
 		var options = this._visibleOptions;
 		if (!options.length) return;
@@ -1201,9 +1223,16 @@ var Select = _react2['default'].createClass({
 					style: this.props.menuStyle,
 					onScroll: this.handleMenuScroll,
 					onMouseDown: this.handleMouseDownOnMenu },
-				menu
+				menu,
+				this.props.multiSelectAll && this.props.multi && options && options.length && this.renderSelectAll(options) || null
 			)
 		);
+	},
+
+	selectAll: function selectAll(event, options) {
+		event.preventDefault();
+		event.stopPropagation();
+		this.addValue(options);
 	},
 
 	render: function render() {

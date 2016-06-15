@@ -56,6 +56,8 @@ const Select = React.createClass({
 		menuRenderer: React.PropTypes.func,         // renders a custom menu with options
 		menuStyle: React.PropTypes.object,          // optional style to apply to the menu
 		multi: React.PropTypes.bool,                // multi-value input
+		multiSelectAll: React.PropTypes.bool,
+		multiSelectAllText: React.PropTypes.string,
 		name: React.PropTypes.string,               // generates a hidden <input /> tag with this field name for html forms
 		newOptionCreator: React.PropTypes.func,     // factory to create new options when allowCreate set
 		noResultsText: stringOrNode,                // placeholder displayed when there are no matching search results
@@ -115,6 +117,8 @@ const Select = React.createClass({
 			matchProp: 'any',
 			menuBuffer: 0,
 			multi: false,
+			multiSelectAll: false,
+			multiSelectAllText: 'Select all',
 			noResultsText: 'No results found',
 			onBlurResetsInput: true,
 			openAfterFocus: false,
@@ -828,6 +832,20 @@ const Select = React.createClass({
 		));
 	},
 
+	renderSelectAll (options) {
+ 		let optionClass = classNames({
+ 			'Select-option': true,
+ 			'is-select-all': true,
+ 			'is-focused': false, // TODO: implement
+ 		});
+
+ 		return (
+ 			<div className={optionClass} onMouseDown={(event) => this.selectAll(event, options)}>
+ 				{this.props.multiSelectAllText}
+ 			</div>
+ 		);
+ 	},
+
 	getFocusableOption (selectedOption) {
 		var options = this._visibleOptions;
 		if (!options.length) return;
@@ -851,10 +869,17 @@ const Select = React.createClass({
 						 onScroll={this.handleMenuScroll}
 						 onMouseDown={this.handleMouseDownOnMenu}>
 					{menu}
+					{this.props.multiSelectAll && this.props.multi && options && options.length && this.renderSelectAll(options) || null}
 				</div>
 			</div>
 		);
 	},
+
+	selectAll (event, options) {
+ 		event.preventDefault();
+ 		event.stopPropagation();
+ 		this.addValue(options);
+ 	},
 
 	render () {
 		let valueArray = this.getValueArray(this.props.value);
