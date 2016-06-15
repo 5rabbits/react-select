@@ -455,6 +455,8 @@ function stringifyValue(value) {
 
 var stringOrNode = _react2['default'].PropTypes.oneOfType([_react2['default'].PropTypes.string, _react2['default'].PropTypes.node]);
 
+var multiSelectAllValue = '$SELECT_ALL$';
+
 var Select = _react2['default'].createClass({
 
 	displayName: 'Select',
@@ -942,15 +944,19 @@ var Select = _react2['default'].createClass({
 		this.props.onChange(value);
 	},
 
-	selectValue: function selectValue(value) {
+	selectValue: function selectValue(option) {
 		this.hasScrolledToOption = false;
 		if (this.props.multi) {
-			this.addValue(value);
+			if (this.props.multiSelectAll && option.value === multiSelectAllValue) {
+				this.setValue(this.props.options);
+			} else {
+				this.addValue(option);
+			}
 			this.setState({
 				inputValue: ''
 			});
 		} else {
-			this.setValue(value);
+			this.setValue(option);
 			this.setState({
 				isOpen: false,
 				inputValue: '',
@@ -979,6 +985,14 @@ var Select = _react2['default'].createClass({
 		this.focus();
 	},
 
+	doClearValue: function doClearValue() {
+		this.setValue(this.props.resetValue);
+		this.setState({
+			isOpen: false,
+			inputValue: ''
+		}, this.focus);
+	},
+
 	clearValue: function clearValue(event) {
 		// if the event was triggered by a mousedown and not the primary
 		// button, ignore it.
@@ -987,11 +1001,7 @@ var Select = _react2['default'].createClass({
 		}
 		event.stopPropagation();
 		event.preventDefault();
-		this.setValue(this.props.resetValue);
-		this.setState({
-			isOpen: false,
-			inputValue: ''
-		}, this.focus);
+		this.doClearValue();
 	},
 
 	focusOption: function focusOption(option) {
@@ -1076,6 +1086,21 @@ var Select = _react2['default'].createClass({
 		}
 		var onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
+			// if all values selected
+			if (this.props.multiSelectAll && this.props.options.length === valueArray.length) {
+				return _react2['default'].createElement(
+					ValueComponent,
+					{
+						disabled: false,
+						key: 'value-SELECT_ALL',
+						onClick: onClick,
+						onRemove: this.doClearValue,
+						value: '$ALL_VALUES$'
+					},
+					this.props.multiSelectAllText
+				);
+			}
+
 			return valueArray.map(function (value, i) {
 				return _react2['default'].createElement(
 					ValueComponent,
@@ -1233,7 +1258,8 @@ var Select = _react2['default'].createClass({
 								'Select-option': true,
 								'is-selected': isSelected,
 								'is-focused': isFocused,
-								'is-disabled': option.disabled
+								'is-disabled': option.disabled,
+								'is-select-all': option.value === multiSelectAllValue
 							});
 
 							return _react2['default'].createElement(
@@ -1293,24 +1319,6 @@ var Select = _react2['default'].createClass({
 		});
 	},
 
-	renderSelectAll: function renderSelectAll(options) {
-		var _this6 = this;
-
-		var optionClass = (0, _classnames2['default'])({
-			'Select-option': true,
-			'is-select-all': true,
-			'is-focused': false });
-
-		// TODO: implement
-		return _react2['default'].createElement(
-			'div',
-			{ className: optionClass, onMouseDown: function (event) {
-					return _this6.selectAll(event, options);
-				} },
-			this.props.multiSelectAllText
-		);
-	},
-
 	getFocusableOption: function getFocusableOption(selectedOption) {
 		var options = this._visibleOptions;
 		if (!options.length) return;
@@ -1336,8 +1344,7 @@ var Select = _react2['default'].createClass({
 					style: this.props.menuStyle,
 					onScroll: this.handleMenuScroll,
 					onMouseDown: this.handleMouseDownOnMenu },
-				menu,
-				this.props.multiSelectAll && this.props.multi && options && options.length && this.renderSelectAll(options) || null
+				menu
 			)
 		);
 	},
@@ -1351,6 +1358,14 @@ var Select = _react2['default'].createClass({
 	render: function render() {
 		var valueArray = this.getValueArray(this.props.value);
 		var options = this._visibleOptions = this.filterOptions(this.props.multi ? valueArray : null);
+
+		if (this.props.multi && this.props.multiSelectAll && options.length) {
+			options.unshift({
+				label: this.props.multiSelectAllText,
+				value: multiSelectAllValue
+			});
+		}
+
 		var isOpen = this.state.isOpen;
 		if (this.props.multi && !options.length && valueArray.length && !this.state.inputValue) isOpen = false;
 		var focusedOption = this._focusedOption = this.getFocusableOption(valueArray[0]);

@@ -22,6 +22,8 @@ const stringOrNode = React.PropTypes.oneOfType([
 	React.PropTypes.node
 ]);
 
+const multiSelectAllValue = '$SELECT_ALL$';
+
 const Select = React.createClass({
 
 	displayName: 'Select',
@@ -492,15 +494,20 @@ const Select = React.createClass({
 		this.props.onChange(value);
 	},
 
-	selectValue (value) {
+	selectValue (option) {
 		this.hasScrolledToOption = false;
 		if (this.props.multi) {
-			this.addValue(value);
+			if (this.props.multiSelectAll && option.value === multiSelectAllValue) {
+				this.setValue(this.props.options);
+			}
+			else {
+				this.addValue(option);
+			}
 			this.setState({
 				inputValue: '',
 			});
 		} else {
-			this.setValue(value);
+			this.setValue(option);
 			this.setState({
 				isOpen: false,
 				inputValue: '',
@@ -527,6 +534,14 @@ const Select = React.createClass({
 		this.focus();
 	},
 
+	doClearValue () {
+		this.setValue(this.props.resetValue);
+		this.setState({
+			isOpen: false,
+			inputValue: '',
+		}, this.focus);
+	},
+
 	clearValue (event) {
 		// if the event was triggered by a mousedown and not the primary
 		// button, ignore it.
@@ -535,11 +550,7 @@ const Select = React.createClass({
 		}
 		event.stopPropagation();
 		event.preventDefault();
-		this.setValue(this.props.resetValue);
-		this.setState({
-			isOpen: false,
-			inputValue: '',
-		}, this.focus);
+		this.doClearValue();
 	},
 
 	focusOption (option) {
@@ -616,6 +627,22 @@ const Select = React.createClass({
 		}
 		let onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
+			// if all values selected
+			if (this.props.multiSelectAll &&
+			this.props.options.length === valueArray.length) {
+				return (
+					<ValueComponent
+						disabled={false}
+						key={`value-SELECT_ALL`}
+						onClick={onClick}
+						onRemove={this.doClearValue}
+						value="$ALL_VALUES$"
+						>
+						{this.props.multiSelectAllText}
+					</ValueComponent>
+				);
+			}
+
 			return valueArray.map((value, i) => {
 				return (
 					<ValueComponent
@@ -779,6 +806,7 @@ const Select = React.createClass({
 						'is-selected': isSelected,
 						'is-focused': isFocused,
 						'is-disabled': option.disabled,
+						'is-select-all': option.value === multiSelectAllValue,
 					});
 
 					return (
@@ -832,20 +860,6 @@ const Select = React.createClass({
 		));
 	},
 
-	renderSelectAll (options) {
- 		let optionClass = classNames({
- 			'Select-option': true,
- 			'is-select-all': true,
- 			'is-focused': false, // TODO: implement
- 		});
-
- 		return (
- 			<div className={optionClass} onMouseDown={(event) => this.selectAll(event, options)}>
- 				{this.props.multiSelectAllText}
- 			</div>
- 		);
- 	},
-
 	getFocusableOption (selectedOption) {
 		var options = this._visibleOptions;
 		if (!options.length) return;
@@ -869,7 +883,6 @@ const Select = React.createClass({
 						 onScroll={this.handleMenuScroll}
 						 onMouseDown={this.handleMouseDownOnMenu}>
 					{menu}
-					{this.props.multiSelectAll && this.props.multi && options && options.length && this.renderSelectAll(options) || null}
 				</div>
 			</div>
 		);
@@ -884,6 +897,14 @@ const Select = React.createClass({
 	render () {
 		let valueArray = this.getValueArray(this.props.value);
 		let options = this._visibleOptions = this.filterOptions(this.props.multi ? valueArray : null);
+
+		if (this.props.multi && this.props.multiSelectAll && options.length) {
+			options.unshift({
+				label: this.props.multiSelectAllText,
+				value: multiSelectAllValue
+			});
+		}
+
 		let isOpen = this.state.isOpen;
 		if (this.props.multi && !options.length && valueArray.length && !this.state.inputValue) isOpen = false;
 		let focusedOption = this._focusedOption = this.getFocusableOption(valueArray[0]);
