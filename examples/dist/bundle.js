@@ -306,9 +306,10 @@ var Value = _react2['default'].createClass({
 		disabled: _react2['default'].PropTypes.bool, // disabled prop passed to ReactSelect
 		onClick: _react2['default'].PropTypes.func, // method to handle click on value label
 		onRemove: _react2['default'].PropTypes.func, // method to handle removal of the value
-		value: _react2['default'].PropTypes.object.isRequired },
+		value: _react2['default'].PropTypes.object.isRequired, // the option object for this value
+		onExpandClick: _react2['default'].PropTypes.func
+	},
 
-	// the option object for this value
 	handleMouseDown: function handleMouseDown(event) {
 		if (event.type === 'mousedown' && event.button !== 0) {
 			return;
@@ -327,6 +328,12 @@ var Value = _react2['default'].createClass({
 		event.preventDefault();
 		event.stopPropagation();
 		this.props.onRemove(this.props.value);
+	},
+
+	onExpandClick: function onExpandClick(event) {
+		event.preventDefault();
+		event.stopPropagation();
+		this.props.onExpandClick(this.props.value);
 	},
 
 	handleTouchEndRemove: function handleTouchEndRemove(event) {
@@ -361,6 +368,23 @@ var Value = _react2['default'].createClass({
 		);
 	},
 
+	renderExpandIcon: function renderExpandIcon() {
+		if (this.props.disabled || !this.props.onExpandClick) return;
+
+		return _react2['default'].createElement(
+			'span',
+			{
+				className: 'Select-value-expand',
+				onClick: this.onExpandClick
+			},
+			_react2['default'].createElement(
+				'span',
+				null,
+				'Expand'
+			)
+		);
+	},
+
 	renderLabel: function renderLabel() {
 		var className = 'Select-value-label';
 		return this.props.onClick || this.props.value.href ? _react2['default'].createElement(
@@ -382,7 +406,8 @@ var Value = _react2['default'].createClass({
 				title: this.props.value.title
 			},
 			this.renderRemoveIcon(),
-			this.renderLabel()
+			this.renderLabel(),
+			this.renderExpandIcon()
 		);
 	}
 
@@ -577,7 +602,8 @@ var Select = _react2['default'].createClass({
 			isLoading: false,
 			isOpen: false,
 			isPseudoFocused: false,
-			required: false
+			required: false,
+			expandAllValues: true
 		};
 	},
 
@@ -948,6 +974,7 @@ var Select = _react2['default'].createClass({
 		this.hasScrolledToOption = false;
 		if (this.props.multi) {
 			if (this.props.multiSelectAll && option.value === multiSelectAllValue) {
+				this.expandAllValues(false);
 				this.setValue(this.props.options);
 			} else {
 				this.addValue(option);
@@ -986,6 +1013,7 @@ var Select = _react2['default'].createClass({
 	},
 
 	doClearValue: function doClearValue() {
+		this.expandAllValues(true);
 		this.setValue(this.props.resetValue);
 		this.setState({
 			isOpen: false,
@@ -1072,8 +1100,19 @@ var Select = _react2['default'].createClass({
 		);
 	},
 
-	renderValue: function renderValue(valueArray, isOpen) {
+	expandAllValues: function expandAllValues(expand) {
 		var _this2 = this;
+
+		this.setState({
+			expandAllValues: expand
+		}, function () {
+			console.log('BLUR');
+			_this2.refs.input.blur();
+		});
+	},
+
+	renderValue: function renderValue(valueArray, isOpen) {
+		var _this3 = this;
 
 		var renderLabel = this.props.valueRenderer || this.getOptionLabel;
 		var ValueComponent = this.props.valueComponent;
@@ -1087,7 +1126,7 @@ var Select = _react2['default'].createClass({
 		var onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
 			// if all values selected
-			if (this.props.multiSelectAll && this.props.options.length === valueArray.length) {
+			if (this.props.multiSelectAll && !this.state.expandAllValues && this.props.options.length === valueArray.length) {
 				return _react2['default'].createElement(
 					ValueComponent,
 					{
@@ -1095,7 +1134,8 @@ var Select = _react2['default'].createClass({
 						key: 'value-SELECT_ALL',
 						onClick: onClick,
 						onRemove: this.doClearValue,
-						value: '$ALL_VALUES$'
+						value: '$ALL_VALUES$',
+						onExpandClick: this.expandAllValues.bind(null, true)
 					},
 					this.props.multiSelectAllText
 				);
@@ -1105,10 +1145,10 @@ var Select = _react2['default'].createClass({
 				return _react2['default'].createElement(
 					ValueComponent,
 					{
-						disabled: _this2.props.disabled || value.clearableValue === false,
-						key: 'value-' + i + '-' + value[_this2.props.valueKey],
+						disabled: _this3.props.disabled || value.clearableValue === false,
+						key: 'value-' + i + '-' + value[_this3.props.valueKey],
 						onClick: onClick,
-						onRemove: _this2.removeValue,
+						onRemove: _this3.removeValue,
 						value: value
 					},
 					renderLabel(value)
@@ -1194,7 +1234,7 @@ var Select = _react2['default'].createClass({
 	},
 
 	filterOptions: function filterOptions(excludeOptions) {
-		var _this3 = this;
+		var _this4 = this;
 
 		var filterValue = this.state.inputValue;
 		var options = this.props.options || [];
@@ -1208,23 +1248,23 @@ var Select = _react2['default'].createClass({
 				filterValue = filterValue.toLowerCase();
 			}
 			if (excludeOptions) excludeOptions = excludeOptions.map(function (i) {
-				return i[_this3.props.valueKey];
+				return i[_this4.props.valueKey];
 			});
 			return options.filter(function (option) {
-				if (excludeOptions && excludeOptions.indexOf(option[_this3.props.valueKey]) > -1) return false;
-				if (_this3.props.filterOption) return _this3.props.filterOption.call(_this3, option, filterValue);
+				if (excludeOptions && excludeOptions.indexOf(option[_this4.props.valueKey]) > -1) return false;
+				if (_this4.props.filterOption) return _this4.props.filterOption.call(_this4, option, filterValue);
 				if (!filterValue) return true;
-				var valueTest = String(option[_this3.props.valueKey]);
-				var labelTest = String(option[_this3.props.labelKey]);
-				if (_this3.props.ignoreAccents) {
-					if (_this3.props.matchProp !== 'label') valueTest = (0, _utilsStripDiacritics2['default'])(valueTest);
-					if (_this3.props.matchProp !== 'value') labelTest = (0, _utilsStripDiacritics2['default'])(labelTest);
+				var valueTest = String(option[_this4.props.valueKey]);
+				var labelTest = String(option[_this4.props.labelKey]);
+				if (_this4.props.ignoreAccents) {
+					if (_this4.props.matchProp !== 'label') valueTest = (0, _utilsStripDiacritics2['default'])(valueTest);
+					if (_this4.props.matchProp !== 'value') labelTest = (0, _utilsStripDiacritics2['default'])(labelTest);
 				}
-				if (_this3.props.ignoreCase) {
-					if (_this3.props.matchProp !== 'label') valueTest = valueTest.toLowerCase();
-					if (_this3.props.matchProp !== 'value') labelTest = labelTest.toLowerCase();
+				if (_this4.props.ignoreCase) {
+					if (_this4.props.matchProp !== 'label') valueTest = valueTest.toLowerCase();
+					if (_this4.props.matchProp !== 'value') labelTest = labelTest.toLowerCase();
 				}
-				return _this3.props.matchPos === 'start' ? _this3.props.matchProp !== 'label' && valueTest.substr(0, filterValue.length) === filterValue || _this3.props.matchProp !== 'value' && labelTest.substr(0, filterValue.length) === filterValue : _this3.props.matchProp !== 'label' && valueTest.indexOf(filterValue) >= 0 || _this3.props.matchProp !== 'value' && labelTest.indexOf(filterValue) >= 0;
+				return _this4.props.matchPos === 'start' ? _this4.props.matchProp !== 'label' && valueTest.substr(0, filterValue.length) === filterValue || _this4.props.matchProp !== 'value' && labelTest.substr(0, filterValue.length) === filterValue : _this4.props.matchProp !== 'label' && valueTest.indexOf(filterValue) >= 0 || _this4.props.matchProp !== 'value' && labelTest.indexOf(filterValue) >= 0;
 			});
 		} else {
 			return options;
@@ -1232,7 +1272,7 @@ var Select = _react2['default'].createClass({
 	},
 
 	renderMenu: function renderMenu(options, valueArray, focusedOption) {
-		var _this4 = this;
+		var _this5 = this;
 
 		if (options && options.length) {
 			if (this.props.menuRenderer) {
@@ -1246,15 +1286,15 @@ var Select = _react2['default'].createClass({
 				});
 			} else {
 				var _ret = (function () {
-					var Option = _this4.props.optionComponent;
-					var renderLabel = _this4.props.optionRenderer || _this4.getOptionLabel;
+					var Option = _this5.props.optionComponent;
+					var renderLabel = _this5.props.optionRenderer || _this5.getOptionLabel;
 
 					return {
 						v: options.map(function (option, i) {
 							var isSelected = valueArray && valueArray.indexOf(option) > -1;
 							var isFocused = option === focusedOption;
 							var optionRef = isFocused ? 'focused' : null;
-							var optionClass = (0, _classnames2['default'])(_this4.props.optionClassName, {
+							var optionClass = (0, _classnames2['default'])(_this5.props.optionClassName, {
 								'Select-option': true,
 								'is-selected': isSelected,
 								'is-focused': isFocused,
@@ -1268,9 +1308,9 @@ var Select = _react2['default'].createClass({
 									className: optionClass,
 									isDisabled: option.disabled,
 									isFocused: isFocused,
-									key: 'option-' + i + '-' + option[_this4.props.valueKey],
-									onSelect: _this4.selectValue,
-									onFocus: _this4.focusOption,
+									key: 'option-' + i + '-' + option[_this5.props.valueKey],
+									onSelect: _this5.selectValue,
+									onFocus: _this5.focusOption,
 									option: option,
 									isSelected: isSelected,
 									ref: optionRef
@@ -1295,12 +1335,12 @@ var Select = _react2['default'].createClass({
 	},
 
 	renderHiddenField: function renderHiddenField(valueArray) {
-		var _this5 = this;
+		var _this6 = this;
 
 		if (!this.props.name) return;
 		if (this.props.joinValues) {
 			var value = valueArray.map(function (i) {
-				return stringifyValue(i[_this5.props.valueKey]);
+				return stringifyValue(i[_this6.props.valueKey]);
 			}).join(this.props.delimiter);
 			return _react2['default'].createElement('input', {
 				type: 'hidden',
@@ -1313,9 +1353,9 @@ var Select = _react2['default'].createClass({
 			return _react2['default'].createElement('input', { key: 'hidden.' + index,
 				type: 'hidden',
 				ref: 'value' + index,
-				name: _this5.props.name,
-				value: stringifyValue(item[_this5.props.valueKey]),
-				disabled: _this5.props.disabled });
+				name: _this6.props.name,
+				value: stringifyValue(item[_this6.props.valueKey]),
+				disabled: _this6.props.disabled });
 		});
 	},
 

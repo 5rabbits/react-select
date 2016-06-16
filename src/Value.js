@@ -11,6 +11,7 @@ const Value = React.createClass({
 		onClick: React.PropTypes.func,                // method to handle click on value label
 		onRemove: React.PropTypes.func,               // method to handle removal of the value
 		value: React.PropTypes.object.isRequired,     // the option object for this value
+		onExpandClick: React.PropTypes.func,
 	},
 
 	handleMouseDown (event) {
@@ -31,6 +32,12 @@ const Value = React.createClass({
 		event.preventDefault();
 		event.stopPropagation();
 		this.props.onRemove(this.props.value);
+	},
+
+	onExpandClick (event) {
+		event.preventDefault();
+		event.stopPropagation();
+		this.props.onExpandClick(this.props.value);
 	},
 
 	handleTouchEndRemove (event){
@@ -65,6 +72,19 @@ const Value = React.createClass({
 		);
 	},
 
+	renderExpandIcon () {
+		if (this.props.disabled || !this.props.onExpandClick) return;
+
+		return (
+			<span
+				className="Select-value-expand"
+				onClick={this.onExpandClick}
+				>
+				<span>Expand</span>
+			</span>
+		);
+	},
+
 	renderLabel () {
 		let className = 'Select-value-label';
 		return this.props.onClick || this.props.value.href ? (
@@ -86,6 +106,7 @@ const Value = React.createClass({
 				>
 				{this.renderRemoveIcon()}
 				{this.renderLabel()}
+				{this.renderExpandIcon()}
 			</div>
 		);
 	}

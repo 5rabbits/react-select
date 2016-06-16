@@ -145,6 +145,7 @@ const Select = React.createClass({
 			isOpen: false,
 			isPseudoFocused: false,
 			required: false,
+			expandAllValues: true,
 		};
 	},
 
@@ -498,6 +499,7 @@ const Select = React.createClass({
 		this.hasScrolledToOption = false;
 		if (this.props.multi) {
 			if (this.props.multiSelectAll && option.value === multiSelectAllValue) {
+				this.expandAllValues(false);
 				this.setValue(this.props.options);
 			}
 			else {
@@ -535,6 +537,7 @@ const Select = React.createClass({
 	},
 
 	doClearValue () {
+		this.expandAllValues(true);
 		this.setValue(this.props.resetValue);
 		this.setState({
 			isOpen: false,
@@ -619,6 +622,15 @@ const Select = React.createClass({
 		);
 	},
 
+	expandAllValues (expand) {
+		this.setState({
+			expandAllValues: expand
+		}, () => {
+			console.log('BLUR');
+			this.refs.input.blur();
+		});
+	},
+
 	renderValue (valueArray, isOpen) {
 		let renderLabel = this.props.valueRenderer || this.getOptionLabel;
 		let ValueComponent = this.props.valueComponent;
@@ -628,7 +640,7 @@ const Select = React.createClass({
 		let onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
 			// if all values selected
-			if (this.props.multiSelectAll &&
+			if (this.props.multiSelectAll && !this.state.expandAllValues &&
 			this.props.options.length === valueArray.length) {
 				return (
 					<ValueComponent
@@ -637,6 +649,7 @@ const Select = React.createClass({
 						onClick={onClick}
 						onRemove={this.doClearValue}
 						value="$ALL_VALUES$"
+						onExpandClick={this.expandAllValues.bind(null, true)}
 						>
 						{this.props.multiSelectAllText}
 					</ValueComponent>
