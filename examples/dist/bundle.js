@@ -1106,7 +1106,6 @@ var Select = _react2['default'].createClass({
 		this.setState({
 			expandAllValues: expand
 		}, function () {
-			console.log('BLUR');
 			_this2.refs.input.blur();
 		});
 	},

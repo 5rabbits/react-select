@@ -1408,6 +1408,31 @@ module.exports = self.fetch.bind(self);
 // shim for using process in browser
 
 var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+(function () {
+  try {
+    cachedSetTimeout = setTimeout;
+  } catch (e) {
+    cachedSetTimeout = function () {
+      throw new Error('setTimeout is not defined');
+    }
+  }
+  try {
+    cachedClearTimeout = clearTimeout;
+  } catch (e) {
+    cachedClearTimeout = function () {
+      throw new Error('clearTimeout is not defined');
+    }
+  }
+} ())
 var queue = [];
 var draining = false;
 var currentQueue;
@@ -1432,7 +1457,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = setTimeout(cleanUpNextTick);
+    var timeout = cachedSetTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -1449,7 +1474,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    clearTimeout(timeout);
+    cachedClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -1461,7 +1486,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        setTimeout(drainQueue, 0);
+        cachedSetTimeout(drainQueue, 0);
     }
 };
 
@@ -6592,6 +6617,7 @@ var shallowEqual = require('fbjs/lib/shallowEqual');
 /**
  * Does a shallow comparison for props and state.
  * See ReactComponentWithPureRenderMixin
+ * See also https://facebook.github.io/react/docs/shallow-compare.html
  */
 function shallowCompare(instance, nextProps, nextState) {
   return !shallowEqual(instance.props, nextProps) || !shallowEqual(instance.state, nextState);

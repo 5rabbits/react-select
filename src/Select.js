@@ -626,7 +626,6 @@ const Select = React.createClass({
 		this.setState({
 			expandAllValues: expand
 		}, () => {
-			console.log('BLUR');
 			this.refs.input.blur();
 		});
 	},
