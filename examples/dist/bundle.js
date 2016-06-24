@@ -1215,12 +1215,16 @@ var Select = _react2['default'].createClass({
 		return _react2['default'].createElement(
 			'span',
 			{ className: 'Select-clear-zone', title: this.props.multi ? this.props.clearAllText : this.props.clearValueText,
-				'aria-label': this.props.multi ? this.props.clearAllText : this.props.clearValueText,
+				'aria-label': this.props.multi ? this.props.clearAllText : this.props.clearValueText
+			},
+			_react2['default'].createElement('span', {
+				className: 'Select-clear',
+				dangerouslySetInnerHTML: { __html: '&times;' },
 				onMouseDown: this.clearValue,
 				onTouchStart: this.handleTouchStart,
 				onTouchMove: this.handleTouchMove,
-				onTouchEnd: this.handleTouchEndClearValue },
-			_react2['default'].createElement('span', { className: 'Select-clear', dangerouslySetInnerHTML: { __html: '&times;' } })
+				onTouchEnd: this.handleTouchEndClearValue
+			})
 		);
 	},
 
