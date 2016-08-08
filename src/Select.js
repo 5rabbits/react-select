@@ -22,6 +22,8 @@ const stringOrNode = React.PropTypes.oneOfType([
 	React.PropTypes.node
 ]);
 
+const multiSelectAllValue = '$SELECT_ALL$';
+
 const Select = React.createClass({
 
 	displayName: 'Select',
@@ -56,6 +58,8 @@ const Select = React.createClass({
 		menuRenderer: React.PropTypes.func,         // renders a custom menu with options
 		menuStyle: React.PropTypes.object,          // optional style to apply to the menu
 		multi: React.PropTypes.bool,                // multi-value input
+		multiSelectAll: React.PropTypes.bool,
+		multiSelectAllText: React.PropTypes.string,
 		name: React.PropTypes.string,               // generates a hidden <input /> tag with this field name for html forms
 		newOptionCreator: React.PropTypes.func,     // factory to create new options when allowCreate set
 		noResultsText: stringOrNode,                // placeholder displayed when there are no matching search results
@@ -115,6 +119,8 @@ const Select = React.createClass({
 			matchProp: 'any',
 			menuBuffer: 0,
 			multi: false,
+			multiSelectAll: false,
+			multiSelectAllText: 'Select all',
 			noResultsText: 'No results found',
 			onBlurResetsInput: true,
 			openAfterFocus: false,
@@ -139,6 +145,7 @@ const Select = React.createClass({
 			isOpen: false,
 			isPseudoFocused: false,
 			required: false,
+			expandAllValues: true,
 		};
 	},
 
@@ -488,15 +495,21 @@ const Select = React.createClass({
 		this.props.onChange(value);
 	},
 
-	selectValue (value) {
+	selectValue (option) {
 		this.hasScrolledToOption = false;
 		if (this.props.multi) {
-			this.addValue(value);
+			if (this.props.multiSelectAll && option.value === multiSelectAllValue) {
+				this.expandAllValues(false);
+				this.setValue(this.props.options);
+			}
+			else {
+				this.addValue(option);
+			}
 			this.setState({
 				inputValue: '',
 			});
 		} else {
-			this.setValue(value);
+			this.setValue(option);
 			this.setState({
 				isOpen: false,
 				inputValue: '',
@@ -523,6 +536,15 @@ const Select = React.createClass({
 		this.focus();
 	},
 
+	doClearValue () {
+		this.expandAllValues(true);
+		this.setValue(this.props.resetValue);
+		this.setState({
+			isOpen: false,
+			inputValue: '',
+		}, this.focus);
+	},
+
 	clearValue (event) {
 		// if the event was triggered by a mousedown and not the primary
 		// button, ignore it.
@@ -531,11 +553,7 @@ const Select = React.createClass({
 		}
 		event.stopPropagation();
 		event.preventDefault();
-		this.setValue(this.props.resetValue);
-		this.setState({
-			isOpen: false,
-			inputValue: '',
-		}, this.focus);
+		this.doClearValue();
 	},
 
 	focusOption (option) {
@@ -604,6 +622,14 @@ const Select = React.createClass({
 		);
 	},
 
+	expandAllValues (expand) {
+		this.setState({
+			expandAllValues: expand
+		}, () => {
+			this.refs.input.blur();
+		});
+	},
+
 	renderValue (valueArray, isOpen) {
 		let renderLabel = this.props.valueRenderer || this.getOptionLabel;
 		let ValueComponent = this.props.valueComponent;
@@ -612,6 +638,23 @@ const Select = React.createClass({
 		}
 		let onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
+			// if all values selected
+			if (this.props.multiSelectAll && !this.state.expandAllValues &&
+			this.props.options.length === valueArray.length) {
+				return (
+					<ValueComponent
+						disabled={false}
+						key={`value-SELECT_ALL`}
+						onClick={onClick}
+						onRemove={this.doClearValue}
+						value="$ALL_VALUES$"
+						onExpandClick={this.expandAllValues.bind(null, true)}
+						>
+						{this.props.multiSelectAllText}
+					</ValueComponent>
+				);
+			}
+
 			return valueArray.map((value, i) => {
 				return (
 					<ValueComponent
@@ -694,11 +737,15 @@ const Select = React.createClass({
 		return (
 			<span className="Select-clear-zone" title={this.props.multi ? this.props.clearAllText : this.props.clearValueText}
 						aria-label={this.props.multi ? this.props.clearAllText : this.props.clearValueText}
-						onMouseDown={this.clearValue}
-						onTouchStart={this.handleTouchStart}
-						onTouchMove={this.handleTouchMove}
-						onTouchEnd={this.handleTouchEndClearValue}>
-				<span className="Select-clear" dangerouslySetInnerHTML={{ __html: '&times;' }} />
+						>
+				<span
+					className="Select-clear"
+					dangerouslySetInnerHTML={{ __html: '&times;' }}
+					onMouseDown={this.clearValue}
+					onTouchStart={this.handleTouchStart}
+					onTouchMove={this.handleTouchMove}
+					onTouchEnd={this.handleTouchEndClearValue}
+				/>
 			</span>
 		);
 	},
@@ -775,6 +822,7 @@ const Select = React.createClass({
 						'is-selected': isSelected,
 						'is-focused': isFocused,
 						'is-disabled': option.disabled,
+						'is-select-all': option.value === multiSelectAllValue,
 					});
 
 					return (
@@ -856,9 +904,23 @@ const Select = React.createClass({
 		);
 	},
 
+	selectAll (event, options) {
+ 		event.preventDefault();
+ 		event.stopPropagation();
+ 		this.addValue(options);
+ 	},
+
 	render () {
 		let valueArray = this.getValueArray(this.props.value);
 		let options = this._visibleOptions = this.filterOptions(this.props.multi ? valueArray : null);
+
+		if (this.props.multi && this.props.multiSelectAll && options.length) {
+			options.unshift({
+				label: this.props.multiSelectAllText,
+				value: multiSelectAllValue
+			});
+		}
+
 		let isOpen = this.state.isOpen;
 		if (this.props.multi && !options.length && valueArray.length && !this.state.inputValue) isOpen = false;
 		let focusedOption = this._focusedOption = this.getFocusableOption(valueArray[0]);
