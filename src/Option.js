@@ -1,5 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
+import shouldPureComponentUpdate from './shouldPureComponentUpdate';
 
 const Option = React.createClass({
 	propTypes: {
@@ -15,6 +16,9 @@ const Option = React.createClass({
 		option: React.PropTypes.object.isRequired,     // object that is base for that option
 		optionIndex: React.PropTypes.number,           // index of the option, used to generate unique ids for aria
 	},
+
+  shouldComponentUpdate: shouldPureComponentUpdate,
+
 	blockEvent (event) {
 		event.preventDefault();
 		event.stopPropagation();

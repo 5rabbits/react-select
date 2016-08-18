@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Input from 'react-input-autosize';
 import classNames from 'classnames';
+import shouldPureComponentUpdate from './shouldPureComponentUpdate';
 
 import stripDiacritics from './utils/stripDiacritics';
 
@@ -184,6 +185,8 @@ const Select = React.createClass({
 			});
 		}
 	},
+
+  shouldComponentUpdate: shouldPureComponentUpdate,
 
 	componentWillUpdate (nextProps, nextState) {
 		if (nextState.isOpen !== this.state.isOpen) {
