@@ -9,6 +9,7 @@ import stripDiacritics from './utils/stripDiacritics';
 import Async from './Async';
 import Option from './Option';
 import Value from './Value';
+import ScrollLock from './ScrollLock';
 
 function stringifyValue (value) {
 	if (typeof value === 'object') {
@@ -57,6 +58,7 @@ const Select = React.createClass({
 		isLoading: React.PropTypes.bool,            // whether the Select is loading externally or not (such as options being loaded)
 		joinValues: React.PropTypes.bool,           // joins multiple values into a single form field with the delimiter (legacy mode)
 		labelKey: React.PropTypes.string,           // path of the label value in option objects
+		lockScroll: React.PropTypes.bool,           // whether the menu should avoid propagation of scroll
 		matchPos: React.PropTypes.string,           // (any|start) match the start or entire string when filtering
 		matchProp: React.PropTypes.string,          // (any|label|value) which option property to filter on
 		menuBuffer: React.PropTypes.number,         // optional buffer (in px) between the bottom of the viewport and the bottom of the menu
@@ -1020,14 +1022,21 @@ const Select = React.createClass({
 			return null;
 		}
 
+		let dropdownMenu = (
+			<div ref="menu" role="listbox" className="Select-menu" id={this._instancePrefix + '-list'}
+					 style={this.props.menuStyle}
+					 onScroll={this.handleMenuScroll}
+					 onMouseDown={this.handleMouseDownOnMenu}>
+				{menu}
+			</div>
+		);
+
 		return (
 			<div ref="menuContainer" className="Select-menu-outer" style={this.props.menuContainerStyle}>
-				<div ref="menu" role="listbox" className="Select-menu" id={this._instancePrefix + '-list'}
-						 style={this.props.menuStyle}
-						 onScroll={this.handleMenuScroll}
-						 onMouseDown={this.handleMouseDownOnMenu}>
-					{menu}
-				</div>
+				{this.props.lockScroll ?
+					<ScrollLock>{dropdownMenu}</ScrollLock> :
+					dropdownMenu
+				}
 			</div>
 		);
 	},
