@@ -249,14 +249,18 @@ const Select = React.createClass({
 		if (enabled) {
 			if (!document.addEventListener && document.attachEvent) {
 				document.attachEvent('ontouchstart', this.handleTouchOutside);
+				document.attachEvent('click', this.handleTouchOutside);
 			} else {
 				document.addEventListener('touchstart', this.handleTouchOutside);
+				document.addEventListener('click', this.handleTouchOutside);
 			}
 		} else {
 			if (!document.removeEventListener && document.detachEvent) {
 				document.detachEvent('ontouchstart', this.handleTouchOutside);
+				document.detachEvent('click', this.handleTouchOutside);
 			} else {
 				document.removeEventListener('touchstart', this.handleTouchOutside);
+				document.removeEventListener('click', this.handleTouchOutside);
 			}
 		}
 	},
@@ -434,7 +438,6 @@ const Select = React.createClass({
 		}
 		var onBlurredState = {
 			isFocused: false,
-			isOpen: false,
 			isPseudoFocused: false,
 		};
 		if (this.props.onBlurResetsInput) {
@@ -479,10 +482,12 @@ const Select = React.createClass({
 				}
 			return;
 			case 9: // tab
-				if (event.shiftKey || !this.state.isOpen || !this.props.tabSelectsValue) {
-					return;
+				if (this.state.isOpen && this.props.tabSelectsValue && !event.shiftKey) {
+					this.selectFocusedOption();
 				}
-				this.selectFocusedOption();
+				else if (this.state.isOpen) {
+					this.closeMenu();
+				}
 			return;
 			case 13: // enter
 				if (!this.state.isOpen) return;
