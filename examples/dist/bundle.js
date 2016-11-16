@@ -1645,6 +1645,12 @@ var Select = _react2['default'].createClass({
 		}
 	},
 
+	setFilterText: function setFilterText(value) {
+		this.setState({
+			inputValue: value
+		});
+	},
+
 	setValue: function setValue(value) {
 		var _this2 = this;
 
@@ -1880,7 +1886,7 @@ var Select = _react2['default'].createClass({
 					)
 				);
 			});
-		} else if (!this.state.inputValue) {
+		} else if (!this.state.inputValue || !this.props.searchable) {
 			if (isOpen) onClick = null;
 			return _react2['default'].createElement(
 				ValueComponent,
