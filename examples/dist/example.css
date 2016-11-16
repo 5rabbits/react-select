@@ -259,6 +259,7 @@
   overflow-y: auto;
   -webkit-flex: 1;
   flex: 1;
+  position: relative;
 }
 .Select-option {
   box-sizing: border-box;
