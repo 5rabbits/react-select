@@ -210,6 +210,7 @@
   margin: -1px;
   clip: rect(0, 0, 0, 0);
   overflow: hidden;
+  float: left;
 }
 @-webkit-keyframes Select-animation-fadeIn {
   from {
@@ -242,10 +243,22 @@
   width: 100%;
   z-index: 1;
   -webkit-overflow-scrolling: touch;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+.Select-menu-header,
+.Select-menu-footer {
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
 }
 .Select-menu {
   max-height: 198px;
   overflow-y: auto;
+  -webkit-flex: 1;
+  flex: 1;
 }
 .Select-option {
   box-sizing: border-box;

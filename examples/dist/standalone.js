@@ -362,8 +362,14 @@ var Creatable = _react2['default'].createClass({
 		// ({ label: string, labelKey: string, valueKey: string }): Object
 		newOptionCreator: _react2['default'].PropTypes.func,
 
+		// input change handler: function (inputValue) {}
+		onInputChange: _react2['default'].PropTypes.func,
+
 		// input keyDown handler: function (event) {}
 		onInputKeyDown: _react2['default'].PropTypes.func,
+
+		// new option click handler: function (option) {}
+		onNewOptionClick: _react2['default'].PropTypes.func,
 
 		// See Select.propTypes.options
 		options: _react2['default'].PropTypes.array,
@@ -401,6 +407,7 @@ var Creatable = _react2['default'].createClass({
 		var _props = this.props;
 		var isValidNewOption = _props.isValidNewOption;
 		var newOptionCreator = _props.newOptionCreator;
+		var onNewOptionClick = _props.onNewOptionClick;
 		var _props$options = _props.options;
 		var options = _props$options === undefined ? [] : _props$options;
 		var shouldKeyDownEventCreateNewOption = _props.shouldKeyDownEventCreateNewOption;
@@ -411,9 +418,13 @@ var Creatable = _react2['default'].createClass({
 
 			// Don't add the same option twice.
 			if (_isOptionUnique) {
-				options.unshift(option);
+				if (onNewOptionClick) {
+					onNewOptionClick(option);
+				} else {
+					options.unshift(option);
 
-				this.select.selectValue(option);
+					this.select.selectValue(option);
+				}
 			}
 		}
 	},
@@ -488,6 +499,12 @@ var Creatable = _react2['default'].createClass({
 	},
 
 	onInputChange: function onInputChange(input) {
+		var onInputChange = this.props.onInputChange;
+
+		if (onInputChange) {
+			onInputChange(input);
+		}
+
 		// This value may be needed in between Select mounts (when this.select is null)
 		this.inputValue = input;
 	},
@@ -823,6 +840,7 @@ var Select = _react2['default'].createClass({
 		clearAllText: stringOrNode, // title for the "clear" control when multi: true
 		clearValueText: stringOrNode, // title for the "clear" control
 		clearable: _react2['default'].PropTypes.bool, // should it be possible to reset value
+		deleteRemoves: _react2['default'].PropTypes.bool, // whether backspace removes an item if there is no text input
 		delimiter: _react2['default'].PropTypes.string, // delimiter to use to join multiple values for the hidden field value
 		disabled: _react2['default'].PropTypes.bool, // whether the Select is disabled or not
 		escapeClearsValue: _react2['default'].PropTypes.bool, // whether escape clears the value when the menu is closed
@@ -840,6 +858,8 @@ var Select = _react2['default'].createClass({
 		matchProp: _react2['default'].PropTypes.string, // (any|label|value) which option property to filter on
 		menuBuffer: _react2['default'].PropTypes.number, // optional buffer (in px) between the bottom of the viewport and the bottom of the menu
 		menuContainerStyle: _react2['default'].PropTypes.object, // optional style to apply to the menu container
+		menuFooter: stringOrNode, // element to display fixed at the bottom of the menu
+		menuHeader: stringOrNode, // element to display fixed at the top of the menu
 		menuRenderer: _react2['default'].PropTypes.func, // renders a custom menu with options
 		menuStyle: _react2['default'].PropTypes.object, // optional style to apply to the menu
 		multi: _react2['default'].PropTypes.bool, // multi-value input
@@ -891,6 +911,7 @@ var Select = _react2['default'].createClass({
 			clearable: true,
 			clearAllText: 'Clear all',
 			clearValueText: 'Clear value',
+			deleteRemoves: true,
 			delimiter: ',',
 			disabled: false,
 			escapeClearsValue: true,
@@ -1013,14 +1034,18 @@ var Select = _react2['default'].createClass({
 		if (enabled) {
 			if (!document.addEventListener && document.attachEvent) {
 				document.attachEvent('ontouchstart', this.handleTouchOutside);
+				document.attachEvent('click', this.handleTouchOutside);
 			} else {
 				document.addEventListener('touchstart', this.handleTouchOutside);
+				document.addEventListener('click', this.handleTouchOutside);
 			}
 		} else {
 			if (!document.removeEventListener && document.detachEvent) {
 				document.detachEvent('ontouchstart', this.handleTouchOutside);
+				document.detachEvent('click', this.handleTouchOutside);
 			} else {
 				document.removeEventListener('touchstart', this.handleTouchOutside);
+				document.removeEventListener('click', this.handleTouchOutside);
 			}
 		}
 	},
@@ -1198,7 +1223,6 @@ var Select = _react2['default'].createClass({
 		}
 		var onBlurredState = {
 			isFocused: false,
-			isOpen: false,
 			isPseudoFocused: false
 		};
 		if (this.props.onBlurResetsInput) {
@@ -1245,10 +1269,11 @@ var Select = _react2['default'].createClass({
 				return;
 			case 9:
 				// tab
-				if (event.shiftKey || !this.state.isOpen || !this.props.tabSelectsValue) {
-					return;
+				if (this.state.isOpen && this.props.tabSelectsValue && !event.shiftKey) {
+					this.selectFocusedOption();
+				} else if (this.state.isOpen) {
+					this.closeMenu();
 				}
-				this.selectFocusedOption();
 				return;
 			case 13:
 				// enter
@@ -1296,6 +1321,13 @@ var Select = _react2['default'].createClass({
 				}
 				this.focusStartOption();
 				break;
+			case 46:
+				// backspace
+				if (!this.state.inputValue && this.props.deleteRemoves) {
+					event.preventDefault();
+					this.popValue();
+				}
+				return;
 			default:
 				return;
 		}
@@ -1830,6 +1862,11 @@ var Select = _react2['default'].createClass({
 			{ ref: function (ref) {
 					return _this7.menuContainer = ref;
 				}, className: 'Select-menu-outer', style: this.props.menuContainerStyle },
+			this.props.menuHeader && _react2['default'].createElement(
+				'div',
+				{ className: 'Select-menu-header' },
+				this.props.menuHeader
+			),
 			_react2['default'].createElement(
 				'div',
 				{ ref: function (ref) {
@@ -1839,6 +1876,11 @@ var Select = _react2['default'].createClass({
 					onScroll: this.handleMenuScroll,
 					onMouseDown: this.handleMouseDownOnMenu },
 				menu
+			),
+			this.props.menuFooter && _react2['default'].createElement(
+				'div',
+				{ className: 'Select-menu-footer' },
+				this.props.menuFooter
 			)
 		);
 	},
