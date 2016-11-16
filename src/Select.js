@@ -598,6 +598,12 @@ const Select = React.createClass({
 		}
 	},
 
+	setFilterText (value) {
+		this.setState({
+			inputValue: value
+		});
+	},
+
 	setValue (value) {
 		if (this.props.autoBlur){
 			this.blurInput();
@@ -813,7 +819,7 @@ const Select = React.createClass({
 					</ValueComponent>
 				);
 			});
-		} else if (!this.state.inputValue) {
+		} else if (!this.state.inputValue || !this.props.searchable) {
 			if (isOpen) onClick = null;
 			return (
 				<ValueComponent
