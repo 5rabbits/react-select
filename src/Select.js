@@ -75,6 +75,8 @@ const Select = React.createClass({
 		matchProp: React.PropTypes.string,          // (any|label|value) which option property to filter on
 		menuBuffer: React.PropTypes.number,         // optional buffer (in px) between the bottom of the viewport and the bottom of the menu
 		menuContainerStyle: React.PropTypes.object, // optional style to apply to the menu container
+		menuFooter: stringOrNode,                   // element to display fixed at the bottom of the menu
+		menuHeader: stringOrNode,                   // element to display fixed at the top of the menu
 		menuRenderer: React.PropTypes.func,         // renders a custom menu with options
 		menuStyle: React.PropTypes.object,          // optional style to apply to the menu
 		multi: React.PropTypes.bool,                // multi-value input
@@ -1034,12 +1036,22 @@ const Select = React.createClass({
 
 		return (
 			<div ref={ref => this.menuContainer = ref} className="Select-menu-outer" style={this.props.menuContainerStyle}>
+				{this.props.menuHeader &&
+					<div className="Select-menu-header">
+						{this.props.menuHeader}
+					</div>
+				}
 				<div ref={ref => this.menu = ref} role="listbox" className="Select-menu" id={this._instancePrefix + '-list'}
 						 style={this.props.menuStyle}
 						 onScroll={this.handleMenuScroll}
 						 onMouseDown={this.handleMouseDownOnMenu}>
 					{menu}
 				</div>
+				{this.props.menuFooter &&
+					<div className="Select-menu-footer">
+						{this.props.menuFooter}
+					</div>
+				}
 			</div>
 		);
 	},
