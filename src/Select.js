@@ -965,7 +965,7 @@ const Select = React.createClass({
 	},
 
 	renderMenu (options, valueArray, focusedOption) {
-		if (options && options.length) {
+		if ((options && options.length) || !this.props.noResultsText) {
 			return this.props.menuRenderer({
 				focusedOption,
 				focusOption: this.focusOption,
