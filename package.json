@@ -27,7 +27,6 @@
     "jsdom": "^9.5.0",
     "mocha": "^3.0.2",
     "react": "^15.0",
-    "react-addons-shallow-compare": "^15.0",
     "react-addons-test-utils": "^15.0",
     "react-component-gulp-tasks": "^0.7.7",
     "react-dom": "^15.0",
@@ -43,6 +42,7 @@
   },
   "peerDependencies": {
     "react": "^0.14 || ^15.0.0-rc || ^15.0",
+    "react-addons-shallow-compare": "^15.0",
     "react-dom": "^0.14 || ^15.0.0-rc || ^15.0"
   },
   "browserify-shim": {

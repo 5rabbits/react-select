@@ -79,6 +79,8 @@ const Select = React.createClass({
 		matchProp: React.PropTypes.string,          // (any|label|value) which option property to filter on
 		menuBuffer: React.PropTypes.number,         // optional buffer (in px) between the bottom of the viewport and the bottom of the menu
 		menuContainerStyle: React.PropTypes.object, // optional style to apply to the menu container
+		menuFooter: stringOrNode,                   // element to display fixed at the bottom of the menu
+		menuHeader: stringOrNode,                   // element to display fixed at the top of the menu
 		menuRenderer: React.PropTypes.func,         // renders a custom menu with options
 		menuStyle: React.PropTypes.object,          // optional style to apply to the menu
 		multi: React.PropTypes.bool,                // multi-value input
@@ -261,14 +263,18 @@ const Select = React.createClass({
 		if (enabled) {
 			if (!document.addEventListener && document.attachEvent) {
 				document.attachEvent('ontouchstart', this.handleTouchOutside);
+				document.attachEvent('click', this.handleTouchOutside);
 			} else {
 				document.addEventListener('touchstart', this.handleTouchOutside);
+				document.addEventListener('click', this.handleTouchOutside);
 			}
 		} else {
 			if (!document.removeEventListener && document.detachEvent) {
 				document.detachEvent('ontouchstart', this.handleTouchOutside);
+				document.detachEvent('click', this.handleTouchOutside);
 			} else {
 				document.removeEventListener('touchstart', this.handleTouchOutside);
+				document.removeEventListener('click', this.handleTouchOutside);
 			}
 		}
 	},
@@ -446,7 +452,6 @@ const Select = React.createClass({
 		}
 		var onBlurredState = {
 			isFocused: false,
-			isOpen: false,
 			isPseudoFocused: false,
 		};
 		if (this.props.onBlurResetsInput) {
@@ -495,10 +500,12 @@ const Select = React.createClass({
 				}
 			return;
 			case 9: // tab
-				if (event.shiftKey || !this.state.isOpen || !this.props.tabSelectsValue) {
-					return;
+				if (this.state.isOpen && this.props.tabSelectsValue && !event.shiftKey) {
+					this.selectFocusedOption();
 				}
-				this.selectFocusedOption();
+				else if (this.state.isOpen) {
+					this.closeMenu();
+				}
 			return;
 			case 13: // enter
 				if (!this.state.isOpen) return;
@@ -605,6 +612,12 @@ const Select = React.createClass({
 		for (var i = 0; i < options.length; i++) {
 			if (options[i][valueKey] === value) return options[i];
 		}
+	},
+
+	setFilterText (value) {
+		this.setState({
+			inputValue: value
+		});
 	},
 
 	setValue (value) {
@@ -820,7 +833,7 @@ const Select = React.createClass({
 		let renderLabel = this.props.valueRenderer || this.getOptionLabel;
 		let ValueComponent = this.props.valueComponent;
 		if (!valueArray.length) {
-			return !this.state.inputValue ? <div className="Select-placeholder">{this.props.placeholder}</div> : null;
+			return (!this.state.inputValue || !this.props.searchable) ? <div className="Select-placeholder">{this.props.placeholder}</div> : null;
 		}
 		let onClick = this.props.onValueClick ? this.handleValueClick : null;
 		if (this.props.multi) {
@@ -857,7 +870,7 @@ const Select = React.createClass({
 					</ValueComponent>
 				);
 			});
-		} else if (!this.state.inputValue) {
+		} else if (!this.state.inputValue || !this.props.searchable) {
 			if (isOpen) onClick = null;
 			return (
 				<ValueComponent
@@ -1006,7 +1019,7 @@ const Select = React.createClass({
 	},
 
 	renderMenu (options, valueArray, focusedOption) {
-		if (options && options.length) {
+		if ((options && options.length) || !this.props.noResultsText) {
 			if (this.props.menuRenderer) {
 				return this.props.menuRenderer({
 					focusedOption,
@@ -1128,9 +1141,19 @@ const Select = React.createClass({
 
 		return (
 			<div ref={ref => this.menuContainer = ref} className="Select-menu-outer" style={this.props.menuContainerStyle}>
+				{this.props.menuHeader &&
+					<div className="Select-menu-header">
+						{this.props.menuHeader}
+					</div>
+				}
 				{this.props.lockScroll ?
 					<ScrollLock>{dropdownMenu}</ScrollLock> :
 					dropdownMenu
+				}
+				{this.props.menuFooter &&
+					<div className="Select-menu-footer">
+						{this.props.menuFooter}
+					</div>
 				}
 			</div>
 		);
