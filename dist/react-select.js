@@ -1782,7 +1782,6 @@ var Select = _react2['default'].createClass({
 	},
 
 	renderMenu: function renderMenu(options, valueArray, focusedOption) {
-		console.log('renderMenu');
 		if (options && options.length || !this.props.noResultsText) {
 			return this.props.menuRenderer({
 				focusedOption: focusedOption,
