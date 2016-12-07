@@ -2026,7 +2026,8 @@ var Select = _react2['default'].createClass({
 	},
 
 	renderMenu: function renderMenu(options, valueArray, focusedOption) {
-		if (options && options.length) {
+		console.log('renderMenu');
+		if (options && options.length || !this.props.noResultsText) {
 			return this.props.menuRenderer({
 				focusedOption: focusedOption,
 				focusOption: this.focusOption,
