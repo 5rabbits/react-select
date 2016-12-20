@@ -1106,6 +1106,10 @@ const Select = React.createClass({
 		));
 	},
 
+	getVisibleOptions () {
+		return this._visibleOptions;
+	},
+
 	getFocusableOptionIndex (selectedOption) {
 		var options = this._visibleOptions;
 		if (!options.length) return null;
