@@ -91,14 +91,16 @@ const Select = React.createClass({
 		onBlur: React.PropTypes.func,               // onBlur handler: function (event) {}
 		onBlurResetsInput: React.PropTypes.bool,    // whether input is cleared on blur
 		onChange: React.PropTypes.func,             // onChange handler: function (newValue) {}
-		onClose: React.PropTypes.func,              // fires when the menu is closed
+		onClose: React.PropTypes.func,              // fires before the menu closes
+		onClosed: React.PropTypes.func,             // fires after the menu closes
 		onCloseResetsInput: React.PropTypes.bool,		// whether input is cleared when menu is closed through the arrow
 		onFocus: React.PropTypes.func,              // onFocus handler: function (event) {}
 		onInputChange: React.PropTypes.func,        // onInputChange handler: function (inputValue) {}
 		onKeyDown: React.PropTypes.func,            // onKeyDown handler: function (event, isOpen) {}
 		onInputKeyDown: React.PropTypes.func,       // input keyDown handler: function (event) {}
 		onMenuScrollToBottom: React.PropTypes.func, // fires when the menu is scrolled to the bottom; can be used to paginate options
-		onOpen: React.PropTypes.func,               // fires when the menu is opened
+		onOpen: React.PropTypes.func,               // fires before the menu opens
+		onOpened: React.PropTypes.func,             // fires after the menu opens
 		onValueClick: React.PropTypes.func,         // onClick handler for value labels: function (value, event) {}
 		openAfterFocus: React.PropTypes.bool,       // boolean to enable opening dropdown when focused
 		openOnFocus: React.PropTypes.bool,          // always open options menu on focus
@@ -219,6 +221,11 @@ const Select = React.createClass({
 	},
 
 	componentDidUpdate (prevProps, prevState) {
+		if (prevState.isOpen !== this.state.isOpen) {
+			const handler = this.state.isOpen ? this.props.onOpened : this.props.onClosed;
+			handler && handler();
+		}
+
 		// focus to the selected option
 		if (this.menu && this.focused && this.state.isOpen && !this.hasScrolledToOption) {
 			let focusedOptionNode = ReactDOM.findDOMNode(this.focused);
