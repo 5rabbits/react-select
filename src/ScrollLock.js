@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import shouldPureComponentUpdate from './shouldPureComponentUpdate';
+import createReactClass from 'create-react-class';
 
-export default React.createClass({
+export default createReactClass({
   displayName: 'ScrollLock',
 
   componentDidMount() {

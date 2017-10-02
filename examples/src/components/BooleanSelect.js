@@ -1,10 +1,12 @@
 import React from 'react';
 import Select from 'react-select';
+import createReactClass from 'create-react-class';
+import PropTypes from 'prop-types';
 
-var ValuesAsBooleansField = React.createClass({
+var ValuesAsBooleansField = createReactClass({
 	displayName: 'ValuesAsBooleansField',
 	propTypes: {
-		label: React.PropTypes.string
+		label: PropTypes.string
 	},
 	getInitialState () {
 		return {
